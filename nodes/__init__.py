@@ -2,7 +2,7 @@ import typing
 from pygame import Vector2, Surface, Event
 
 if typing.TYPE_CHECKING:
-    from pgshared.app import Scene
+    from fakeengine.app import Scene
 
 
 class Node:

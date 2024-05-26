@@ -1,7 +1,7 @@
 import pygame
 import typing
-from pgshared.nodes import Node
-from pgshared.signal import Signal
+from fakeengine.nodes import Node
+from fakeengine.signal import Signal
 
 
 class KeyboardData(typing.TypedDict):

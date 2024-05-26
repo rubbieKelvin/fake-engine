@@ -2,7 +2,7 @@ import math
 import typing
 import pygame
 from . import Node
-from pgshared.app import Scene
+from fakeengine.app import Scene
 
 
 class Timer(Node):

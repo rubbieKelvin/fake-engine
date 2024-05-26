@@ -1,12 +1,12 @@
 import typing
 from . import Node
-from pgshared.typedefs import Factory
+from fakeengine.typedefs import Factory
 from pygame.font import Font, SysFont
 from pygame import Color, Surface, Vector2
 
 
 if typing.TYPE_CHECKING:
-    from pgshared.app import Scene
+    from fakeengine.app import Scene
 
 
 class Text(Node):

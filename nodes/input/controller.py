@@ -2,8 +2,8 @@ import math
 import pygame
 import typing
 
-from pgshared.nodes import Node
-from pgshared.signal import Signal, Ref
+from fakeengine.nodes import Node
+from fakeengine.signal import Signal, Ref
 
 
 class JoyStickAxis(typing.TypedDict):
