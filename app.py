@@ -1,7 +1,5 @@
 import pygame
 import typing
-from .nodes import Node
-
 
 class Scene:
     """Represents a page in the application, containing nodes for rendering."""
@@ -14,69 +12,22 @@ class Scene:
             app (App): The application instance to which this page belongs.
         """
         self.app = app
-        self.all_nodes: list["Node"] = []
-        self.listening_nodes: list["Node"] = []
 
-    def add_node(self, node: "Node"):
-        """
-        Adds a node to the page.
-
-        Parameters:
-            node (Node): The node to add to the page.
-        """
-
-        self.all_nodes.append(node)
-        if node.can_listen:
-            self.listening_nodes.append(node)
-
-    def add_nodes(self, nodes: typing.Iterable["Node"]):
-        """
-        Adds multiple nodes to the page.
-
-        Parameters:
-            nodes (list[Node] | tuple[Node, ...]): The nodes to add to the page.
-        """
-
-        self.all_nodes.extend(nodes)
-        self.listening_nodes.extend([node for node in nodes if node.can_listen])
-
-    def remove_node(self, node: "Node"):
-        if node.can_listen:
-            try:
-                index = self.listening_nodes.index(node)
-                del self.listening_nodes[index]
-            except ValueError as e:
-                raise e
-
-        try:
-            index = self.all_nodes.index(node)
-            node.on_destroy()
-            del self.all_nodes[index]
-        except ValueError:
-            pass
-
-    def _handle_event(self, event: pygame.Event):
-        for node in self.listening_nodes:
-            node.handle_event(event)
-        self.handle_event(event)
-
-    def handle_event(self, event: pygame.Event):
+    def handle_event(self, event: pygame.Event) -> typing.Literal[-1] | None:
         """
         Handles events for the page.
 
         Parameters:
             event (pygame.event.Event): The event to handle.
         """
-        pass
 
     def run(self, dt: float):
         """
-        Runs the page logic.
+        Runs the page logic. You probably want to render your drawings here
 
         Parameters:
             dt (float): The time elapsed since the last frame, in seconds.
         """
-        Node.render_many_nodes(self.all_nodes, dt, self)
 
     def init(self, app: "App", **kwargs: typing.Any):
         """Initializes the page. you can set initialization variables here.
@@ -127,54 +78,7 @@ class App:
         pygame.display.set_caption(caption)
         self.clear_color = clear_color
         self.clock = pygame.time.Clock()
-        self.current_page: Scene | None = None
-        self.global_nodes: list["Node"] = (
-            []
-        )  # Hold a record of global nodes that run on the app level
-        self.global_listening_nodes: list["Node"] = []
-
-    def add_global_node(self, node: "Node", name: str | None = None):
-        """
-        Adds a global node to the app.
-
-        Parameters:
-            node (Node): The node to add to the page.
-        """
-
-        self.global_nodes.append(node)
-        if node.can_listen:
-            self.global_listening_nodes.append(node)
-
-    def add_global_nodes(self, nodes: typing.Iterable["Node"]):
-        """
-        Adds multiple global nodes to the app.
-
-        Parameters:
-            nodes (list[Node] | tuple[Node, ...]): The nodes to add to the page.
-        """
-
-        self.global_nodes.extend(nodes)
-        self.global_listening_nodes.extend([node for node in nodes if node.can_listen])
-
-    def remove_node(self, node: "Node"):
-        if node.can_listen:
-            try:
-                index = self.global_listening_nodes.index(node)
-                del self.global_listening_nodes[index]
-            except ValueError as e:
-                raise e
-
-        try:
-            index = self.global_nodes.index(node)
-            node.on_destroy()
-            del self.global_nodes[index]
-        except ValueError:
-            pass
-
-    def _handle_event(self, event: pygame.Event):
-        for node in self.global_listening_nodes:
-            node.handle_event(event)
-        self.handle_event(event)
+        self.scene: Scene | None = None
 
     @property
     def height(self) -> int:
@@ -186,55 +90,59 @@ class App:
         """Returns the screen width"""
         return self.screen.get_width()
 
-    def in_loop(self, delta: float):
+    def run(self, delta: float):
         """Ran in a loop"""
-        pass
+        if self.scene:
+            self.scene.run(delta)
 
-    def handle_event(self, event: pygame.Event):
+    def handle_event(self, event: pygame.Event) -> typing.Literal[-1] | None:
         """Handle one event"""
-        pass
+        if self.scene:
+            return self.scene.handle_event(event)
+        return None
 
-    def set_scene(self, page: Scene | type[Scene], **kwargs: typing.Any):
+    def set_scene(self, scene: Scene | type[Scene], **kwargs: typing.Any):
         """
-        Sets the current page of the application.
+        Sets the current scene of the application.
 
         Parameters:
-            page (Scene): The page to set as the current page.
+            scene (Scene): The scene to set as the current scene.
         """
-        if self.current_page:
-            self.current_page.reset()
+        # reset the old scene if it exists
+        if self.scene:
+            self.scene.reset()
 
-        if type(page) is type:
-            page = page(self)
+        # if we passed in a Class and not instance of a class, let's create the instance here
+        if type(scene) is type:
+            scene = scene(self)
 
-        page = typing.cast(Scene, page)
+        scene = typing.cast(Scene, scene)
 
-        page.init(self, **kwargs)
-        self.current_page = page
+        # run initialisation
+        scene.init(self, **kwargs)
+        self.scene = scene
 
-    def loop(self):
+    def mainloop(self):
         """Starts the main loop of the application."""
         self.running = True
 
-        while self.running:
-            self.screen.fill(self.clear_color)
+        try:
+            while self.running:
+                # clear the screen
+                self.screen.fill(self.clear_color)
 
-            for event in pygame.event.get():
-                if event.type == pygame.constants.QUIT:
-                    self.running = False
+                # event loop
+                for event in pygame.event.get():
+                    if self.handle_event(event) == -1:
+                        break
 
-                if self.current_page:
-                    self.current_page.handle_event(event)
+                # frame rate limiting
+                delta = self.clock.tick(60) / 1000
 
-                self._handle_event(event)
-
-            delta = self.clock.tick(60) / 1000
-
-            self.in_loop(delta)
-            if self.current_page:
-                self.current_page.run(delta)
-
-            pygame.display.flip()
+                self.run(delta)
+                pygame.display.flip()
+        except KeyboardInterrupt:
+            print("Process interrupted by user.")
 
         # quit
         pygame.quit()

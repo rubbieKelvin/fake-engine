@@ -29,19 +29,13 @@ class BaseController(Node):
     def __init__(self) -> None:
         """Initializes a new BaseController instance."""
 
-        super().__init__(pygame.Vector2(), can_render=False)
+        super().__init__((0, 0))
         self.index = len(self.controllers)
         self.controllers.append(self)
         self.joystick: pygame.joystick.JoystickType | None = None
 
         self.on_connected: Signal[BaseController] = Signal()
         self.on_disconnected: Signal[BaseController] = Signal()
-
-    @typing.final
-    @property
-    def can_listen(self) -> typing.Literal[True]:
-        """Indicates that the controller can listen for events."""
-        return True
 
     def handle_controller_event(self, event: pygame.Event):
         """Handle controller event"""

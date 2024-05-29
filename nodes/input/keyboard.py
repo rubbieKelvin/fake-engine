@@ -15,13 +15,9 @@ class Keyboard(Node):
     """A class for key board"""
 
     def __init__(self) -> None:
-        super().__init__(pos=0, can_render=True)
+        super().__init__(pos=(0, 0))
         self.on_key_up: Signal[str, KeyboardData] = Signal()
         self.on_key_down: Signal[str, KeyboardData] = Signal()
-
-    @property
-    def can_listen(self):
-        return True
 
     def handle_event(self, event: pygame.Event):
         handler = {pygame.KEYDOWN: self.on_key_down, pygame.KEYUP: self.on_key_up}

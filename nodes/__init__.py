@@ -1,41 +1,28 @@
+import math
 import typing
-from pygame import Vector2, Surface, Event
-
-if typing.TYPE_CHECKING:
-    from fakeengine.app import Scene
+import pygame
+from fakeengine.app import Scene
+from fakeengine.typedefs import Factory
 
 
 class Node:
     """Represents a basic drawable element."""
 
-    def __init__(
-        self, pos: float | Vector2 | tuple[float, float], can_render: bool = True
-    ) -> None:
+    def __init__(self, pos: tuple[float, float]) -> None:
         """
         Initializes a new Node instance.
 
         Parameters:
             x (int): The x-coordinate of the node's position.
             y (int): The y-coordinate of the node's position.
-            can_render (bool): Optional. Indicates whether the node can be rendered. Defaults to True.
         """
-        self.pos = pos if isinstance(pos, Vector2) else Vector2(pos)
-        self.can_render = can_render
+        self.pos = pos
 
-    @property
-    def can_listen(self) -> typing.Literal[True] | typing.Literal[False]:
-        """Nodes should override this when the want to listen to events.
-        The value of this is used when the node is added to the scene.
-        changing the value after that would have no effect on the node.
-        This is beacasue the scene only checks this property at that point
-        """
-        return False
-
-    def handle_event(self, event: Event):
+    def handle_event(self, event: pygame.Event):
         """Handle event"""
         pass
 
-    def render(self, scene: "Scene") -> tuple[Surface, Vector2] | None:
+    def render(self, scene: "Scene") -> tuple[pygame.Surface, pygame.Vector2] | None:
         """
         Draws the node.
 
@@ -50,30 +37,71 @@ class Node:
     def process(self, delta: float, scene: "Scene") -> None:
         """handle computatations for this node"""
 
-    def on_destroy(self):
-        """called when a node is removed from the scene"""
-        print("node destroyed")
 
-    @staticmethod
-    def render_many_nodes(nodes: list["Node"], delta: float, scene: "Scene"):
-        group_to_draw: list[tuple[Surface, Vector2]] = []
+class Text(Node):
+    def __init__(
+        self,
+        pos: tuple[float, float] = (0, 0),
+        text: str | Factory[str] | None = None,
+        font: pygame.Font | None = None,
+        color: pygame.Color = pygame.Color(0, 0, 0),
+        center: bool = False,
+    ) -> None:
+        super().__init__(pos)
+        self.text = text
+        self.color = color
+        self.font = font or pygame.font.SysFont("DejaVu Sans", 16)
+        self.center = center
 
-        for node in nodes:
-            node.process(delta, scene)
+    def draw(
+        self, scene: "Scene", *, return_surf=True
+    ) -> tuple[pygame.Surface, pygame.Vector2] | None:
+        if self.text:
+            text = self.text() if callable(self.text) else self.text
+            surf = self.font.render(text, True, self.color)
 
-        for node in nodes:
-            # # check if we can draw and we're visible
-            # # dont draw objects that are not in the screen
-            # if not node.can_render or not Rect(
-            #     0, 0, scene.app.width, scene.app.height
-            # ).collidepoint(node.pos):
-            #     continue
+            rect = surf.get_frect()
+            rect.topleft = self.pos
 
-            # get visual detail
-            detail = node.render(scene)
+            if self.center:
+                rect.center = self.pos
 
-            if detail:
-                group_to_draw.append(detail)
+            if return_surf:
+                return surf, pygame.Vector2(rect.topleft)
+            scene.app.screen.blit(surf, rect)
+        return None
 
-        if len(group_to_draw) > 0:
-            scene.app.screen.blits(group_to_draw)
+
+class Timer(Node):
+    def __init__(
+        self,
+        timeout: float,
+        trigger: typing.Callable[..., typing.Any],
+        single_shot: bool = True,
+    ) -> None:
+        Node.__init__(self, (0, 0))
+        self.countdown: float = 0.0
+        self.timeout = timeout
+        self.trigger = trigger
+        self.single_shot = single_shot
+
+    @property
+    def active(self) -> bool:
+        return self.countdown < self.timeout or not self.single_shot
+
+    def reset(self):
+        self.countdown = 0
+
+    def process(self, delta: float, scene: Scene):
+        if not self.active:
+            return
+
+        self.countdown += delta
+
+        if self.countdown >= self.timeout:
+            self.trigger()
+
+            if self.single_shot:
+                self.countdown = math.inf
+            else:
+                self.reset()
