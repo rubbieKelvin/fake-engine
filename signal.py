@@ -1,11 +1,8 @@
 import typing
 import pydantic
 
-T = typing.TypeVar("T")
-Param = typing.ParamSpec("Param")
 
-
-class Signal(typing.Generic[Param]):
+class Signal[**Param]:
     """
     A class representing a signal/slot mechanism for connecting callbacks to events.
 
@@ -56,7 +53,7 @@ class Signal(typing.Generic[Param]):
         del self.callbacks[index]
 
 
-class Ref(typing.Generic[T]):
+class Ref[T]:
     """
     A class representing a reference to a value of a generic type with signal support for value changes.
 
@@ -118,6 +115,7 @@ class Ref(typing.Generic[T]):
     def mutate(self, val_or_method: T) -> None: ...
     @typing.overload
     def mutate(self, val_or_method: MethodCall) -> None: ...
+
     def mutate(self, val_or_method):
         """
         Mutates the referenced value. It can accept either a new value directly or a MethodCall object representing a method to be applied to the value.

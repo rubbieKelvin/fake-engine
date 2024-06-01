@@ -1,6 +1,7 @@
 import pygame
 import typing
 
+
 class Scene:
     """Represents a page in the application, containing nodes for rendering."""
 
@@ -31,7 +32,7 @@ class Scene:
 
     def init(self, app: "App", **kwargs: typing.Any):
         """Initializes the page. you can set initialization variables here.
-        And call some fontions like getting resources and all.
+        And call some functions like getting resources and all.
         """
         pass
 
@@ -83,12 +84,14 @@ class App:
     @property
     def height(self) -> int:
         """Returns the screen height"""
-        return self.screen.get_height()
+        size = pygame.display.get_window_size()
+        return size[1]
 
     @property
     def width(self) -> int:
         """Returns the screen width"""
-        return self.screen.get_width()
+        size = pygame.display.get_window_size()
+        return size[0]
 
     def run(self, delta: float):
         """Ran in a loop"""

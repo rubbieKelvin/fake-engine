@@ -13,8 +13,7 @@ class Node:
         Initializes a new Node instance.
 
         Parameters:
-            x (int): The x-coordinate of the node's position.
-            y (int): The y-coordinate of the node's position.
+            pos (tuple[float, float): The node's position
         """
         self.pos = pos
 
@@ -35,7 +34,7 @@ class Node:
         """
 
     def process(self, delta: float, scene: "Scene") -> None:
-        """handle computatations for this node"""
+        """handle computations for this node"""
 
 
 class Text(Node):
@@ -70,6 +69,47 @@ class Text(Node):
                 return surf, pygame.Vector2(rect.topleft)
             scene.app.screen.blit(surf, rect)
         return None
+
+
+class Logger(Node):
+    INSTANCE: 'Logger|None' = None
+    
+    def __init__(
+        self,
+        pos: tuple[float, float],
+        header: str | None = "Logs",
+        font: pygame.Font | None = None,
+        color: pygame.Color = pygame.Color(0, 0, 0),
+        cap: int = 50,
+    ) -> None:
+        super().__init__(pos)
+        self.cap = cap
+        self.header = header
+        self.logs: list[str] = (
+            [header.capitalize(), f"+{'-'*len(header)}"] if header else []
+        )
+        self.text_node = Text(pos, lambda: "\n".join(self.logs), font, color)
+
+    @staticmethod
+    def log(*args: str, sep=" "):
+        if Logger.INSTANCE is None:
+            return
+        
+        self = Logger.INSTANCE
+        if len(args) == 0:
+            raise Exception("At least one argument is required")
+
+        text = sep.join(args)
+
+        self.logs.insert(2 if self.header else 0, text)
+        if len(self.logs) > self.cap:
+            self.logs = self.logs[: self.cap]
+
+    def draw(
+        self,
+        scene: "Scene",
+    ) -> None:
+        self.text_node.draw(scene, return_surf=False)
 
 
 class Timer(Node):
