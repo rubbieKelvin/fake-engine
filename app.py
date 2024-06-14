@@ -1,6 +1,6 @@
 import pygame
 import typing
-
+from fakeengine.input.devices import HardwareWrapper
 
 class Scene:
     """Represents a page in the application, containing nodes for rendering."""
@@ -44,15 +44,15 @@ class Scene:
 class App:
     """Represents the main application"""
 
-    INSTANCE: "App|None" = None
+    instance: "App|None" = None
 
     def __init__(
         self,
         width: int,
         height: int,
         *,
-        caption: str,
         flags: int = 0,
+        caption: str = "Game",
         clear_color: pygame.Color = pygame.Color(0, 0, 0),
     ) -> None:
         """Initializes a new App instance.
@@ -65,11 +65,11 @@ class App:
         """
 
         # Only one instance of this class should be available in a single runtime
-        if self.INSTANCE:
+        if self.instance:
             raise Exception("Application already running")
 
         # Set instance
-        self.INSTANCE = self
+        self.instance = self
 
         # Initialize
         pygame.init()
@@ -77,6 +77,7 @@ class App:
         self.running = False
         self.screen = pygame.display.set_mode((width, height), flags=flags)
         pygame.display.set_caption(caption)
+
         self.clear_color = clear_color
         self.clock = pygame.time.Clock()
         self.scene: Scene | None = None
@@ -100,6 +101,8 @@ class App:
 
     def handle_event(self, event: pygame.Event) -> typing.Literal[-1] | None:
         """Handle one event"""
+        HardwareWrapper.sync_all(event)
+        
         if self.scene:
             return self.scene.handle_event(event)
         return None

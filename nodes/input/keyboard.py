@@ -1,7 +1,7 @@
 import pygame
 import typing
 from fakeengine.nodes import Node
-from fakeengine.signal import Signal
+from fakeengine.reactive import Signal
 
 
 class KeyboardData(typing.TypedDict):

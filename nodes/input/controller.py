@@ -3,7 +3,7 @@ import pygame
 import typing
 
 from fakeengine.nodes import Node
-from fakeengine.signal import Signal, Ref
+from fakeengine.reactive import Signal, Ref
 
 
 class JoyStickAxis(typing.TypedDict):
@@ -61,7 +61,7 @@ class BaseController(Node):
         ):
             return
 
-        # Handle hotplugging
+        # Handle hot plugging
         if self.joystick and event.instance_id == self.joystick.get_instance_id():
             if event.type == pygame.JOYDEVICEREMOVED:
                 self.on_disconnected.emit(self)
@@ -129,11 +129,11 @@ class Playstation4Controller(BaseController):
         self.on_r1_button_up: Signal[Playstation4Controller] = Signal()  # 10
         self.on_r1_button_down: Signal[Playstation4Controller] = Signal()  # 10
         # joy stick
-        self.on_l_axis_changed: Signal[Playstation4Controller, JoyStickAxis] = Signal()
-        self.on_r_axis_changed: Signal[Playstation4Controller, JoyStickAxis] = Signal()
+        self.on_l_axis_changed = Signal[Playstation4Controller, JoyStickAxis]()
+        self.on_r_axis_changed = Signal[Playstation4Controller, JoyStickAxis]()
         # lever
-        self.on_l2_value_changed: Signal[Playstation4Controller, float] = Signal()
-        self.on_r2_value_changed: Signal[Playstation4Controller, float] = Signal()
+        self.on_l2_value_changed = Signal[Playstation4Controller, float]()
+        self.on_r2_value_changed = Signal[Playstation4Controller, float]()
 
         # TODO: Implement global pressed for all buttons an lever
         # same as the other signals above, but these will fire as long...
