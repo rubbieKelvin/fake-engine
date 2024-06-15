@@ -5,7 +5,7 @@ from pygame import Vector2, Surface, FRect
 
 
 class Camera(Group):
-    def __init__(self, surface: Surface|None = None, *sprites: Sprite):
+    def __init__(self, surface: Surface | None = None, *sprites: Sprite):
         super().__init__(*sprites)
         self.offset = Vector2(0, 0)
         self.surface = surface
@@ -15,7 +15,7 @@ class Camera(Group):
 
         if not surface:
             # Probably raise an exception here
-            pass
+            return
 
         for sprite in self.sprites():
             rect: FRect | None = sprite.rect
@@ -27,5 +27,3 @@ class Camera(Group):
             new_rect.topleft += self.offset
 
             surface.blit(sprite.image, new_rect)
-
-
