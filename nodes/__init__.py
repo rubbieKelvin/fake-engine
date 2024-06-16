@@ -53,7 +53,7 @@ class Text(Node):
         self.center = center
 
     def draw(
-        self, scene: "Scene", *, return_surf=True
+        self, scene: "Scene", *, return_surf=False
     ) -> tuple[pygame.Surface, pygame.Vector2] | None:
         if self.text:
             text = self.text() if callable(self.text) else self.text
@@ -72,8 +72,8 @@ class Text(Node):
 
 
 class Logger(Node):
-    INSTANCE: 'Logger|None' = None
-    
+    INSTANCE: "Logger|None" = None
+
     def __init__(
         self,
         pos: tuple[float, float],
@@ -94,7 +94,7 @@ class Logger(Node):
     def log(*args: str, sep=" "):
         if Logger.INSTANCE is None:
             return
-        
+
         self = Logger.INSTANCE
         if len(args) == 0:
             raise Exception("At least one argument is required")
